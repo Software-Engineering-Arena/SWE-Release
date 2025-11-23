@@ -363,7 +363,7 @@ def fetch_all_release_metadata_streaming(conn, identifiers, start_date, end_date
         end_date: End datetime (timezone-aware)
 
     Returns:
-        Dictionary mapping agent identifier to list of release metadata
+        Dictionary mapping assistant identifier to list of release metadata
     """
     identifier_list = ', '.join([f"'{id}'" for id in identifiers])
     metadata_by_agent = defaultdict(list)
@@ -401,7 +401,7 @@ def fetch_all_release_metadata_streaming(conn, identifiers, start_date, end_date
         # Extract release information from ReleaseEvent payloads
         query = f"""
         SELECT DISTINCT
-            actor.login as agent,
+            actor.login as assistant,
             TRY_CAST(json_extract_string(to_json(payload), '$.release.tag_name') AS VARCHAR) as release_tag,
             TRY_CAST(json_extract_string(to_json(payload), '$.action') AS VARCHAR) as action,
             created_at
@@ -424,12 +424,12 @@ def fetch_all_release_metadata_streaming(conn, identifiers, start_date, end_date
 
             batch_releases = 0
             for row in results:
-                agent = row[0]
+                assistant = row[0]
                 release_tag = row[1]
                 action = row[2]
                 created_at = normalize_date_format(row[3]) if row[3] else None
 
-                if not agent or not release_tag:
+                if not assistant or not release_tag:
                     continue
 
                 # Build release metadata
@@ -439,7 +439,7 @@ def fetch_all_release_metadata_streaming(conn, identifiers, start_date, end_date
                     'created_at': created_at,
                 }
 
-                metadata_by_agent[agent].append(release_metadata)
+                metadata_by_agent[assistant].append(release_metadata)
                 batch_releases += 1
                 total_releases += 1
 
@@ -454,7 +454,7 @@ def fetch_all_release_metadata_streaming(conn, identifiers, start_date, end_date
 
     # Final summary
     agents_with_data = sum(1 for releases in metadata_by_agent.values() if releases)
-    print(f"\n   ✓ Complete: {total_releases} releases found for {agents_with_data}/{len(identifiers)} agents")
+    print(f"\n   ✓ Complete: {total_releases} releases found for {agents_with_data}/{len(identifiers)} assistants")
 
     return dict(metadata_by_agent)
 
@@ -517,14 +517,14 @@ def sync_agents_repo():
 
 def load_agents_from_hf():
     """
-    Load all agent metadata JSON files from local git repository.
+    Load all assistant metadata JSON files from local git repository.
     ALWAYS syncs with remote first to ensure we have the latest bot data.
     """
     # MANDATORY: Sync with remote first to get latest bot data
-    print(f"   Syncing bot_data repository to get latest agents...")
+    print(f"   Syncing bot_data repository to get latest assistants...")
     sync_agents_repo()  # Will raise exception if sync fails
 
-    agents = []
+    assistants = []
 
     # Scan local directory for JSON files
     if not os.path.exists(AGENTS_REPO_LOCAL_PATH):
@@ -532,7 +532,7 @@ def load_agents_from_hf():
 
     # Walk through the directory to find all JSON files
     files_processed = 0
-    print(f"   Loading agent metadata from {AGENTS_REPO_LOCAL_PATH}...")
+    print(f"   Loading assistant metadata from {AGENTS_REPO_LOCAL_PATH}...")
 
     for root, dirs, files in os.walk(AGENTS_REPO_LOCAL_PATH):
         # Skip .git directory
@@ -550,7 +550,7 @@ def load_agents_from_hf():
                 with open(file_path, 'r', encoding='utf-8') as f:
                     agent_data = json.load(f)
 
-                # Only include active agents
+                # Only include active assistants
                 if agent_data.get('status') != 'active':
                     continue
 
@@ -558,14 +558,14 @@ def load_agents_from_hf():
                 github_identifier = filename.replace('.json', '')
                 agent_data['github_identifier'] = github_identifier
 
-                agents.append(agent_data)
+                assistants.append(agent_data)
 
             except Exception as e:
                 print(f"   ○ Error loading {filename}: {str(e)}")
                 continue
 
-    print(f"   ✓ Loaded {len(agents)} active agents (from {files_processed} total files)")
-    return agents
+    print(f"   ✓ Loaded {len(assistants)} active assistants (from {files_processed} total files)")
+    return assistants
 
 
 def calculate_release_stats_from_metadata(metadata_list):
@@ -577,12 +577,12 @@ def calculate_release_stats_from_metadata(metadata_list):
     }
 
 
-def calculate_monthly_metrics_by_agent(all_metadata_dict, agents):
-    """Calculate monthly metrics for all agents for visualization."""
-    identifier_to_name = {agent.get('github_identifier'): agent.get('name') for agent in agents if agent.get('github_identifier')}
+def calculate_monthly_metrics_by_agent(all_metadata_dict, assistants):
+    """Calculate monthly metrics for all assistants for visualization."""
+    identifier_to_name = {assistant.get('github_identifier'): assistant.get('name') for assistant in assistants if assistant.get('github_identifier')}
 
     if not all_metadata_dict:
-        return {'agents': [], 'months': [], 'data': {}}
+        return {'assistants': [], 'months': [], 'data': {}}
 
     agent_month_data = defaultdict(lambda: defaultdict(list))
 
@@ -625,30 +625,30 @@ def calculate_monthly_metrics_by_agent(all_metadata_dict, agents):
     agents_list = sorted(list(agent_month_data.keys()))
 
     return {
-        'agents': agents_list,
+        'assistants': agents_list,
         'months': months,
         'data': result_data
     }
 
 
-def construct_leaderboard_from_metadata(all_metadata_dict, agents):
+def construct_leaderboard_from_metadata(all_metadata_dict, assistants):
     """Construct leaderboard from in-memory release metadata."""
-    if not agents:
-        print("Error: No agents found")
+    if not assistants:
+        print("Error: No assistants found")
         return {}
 
     cache_dict = {}
 
-    for agent in agents:
-        identifier = agent.get('github_identifier')
-        agent_name = agent.get('name', 'Unknown')
+    for assistant in assistants:
+        identifier = assistant.get('github_identifier')
+        agent_name = assistant.get('name', 'Unknown')
 
         bot_metadata = all_metadata_dict.get(identifier, [])
         stats = calculate_release_stats_from_metadata(bot_metadata)
 
         cache_dict[identifier] = {
             'name': agent_name,
-            'website': agent.get('website', 'N/A'),
+            'website': assistant.get('website', 'N/A'),
             'github_identifier': identifier,
             **stats
         }
@@ -702,7 +702,7 @@ def save_leaderboard_data_to_hf(leaderboard_dict, monthly_metrics):
 
 def mine_all_agents():
     """
-    Mine release metadata for all agents using STREAMING batch processing.
+    Mine release metadata for all assistants using STREAMING batch processing.
     Downloads GHArchive data, then uses BATCH-based DuckDB queries.
     """
     print(f"\n[1/4] Downloading GHArchive data...")
@@ -710,19 +710,19 @@ def mine_all_agents():
     if not download_all_gharchive_data():
         print("Warning: Download had errors, continuing with available data...")
 
-    print(f"\n[2/4] Loading agent metadata...")
+    print(f"\n[2/4] Loading assistant metadata...")
 
-    agents = load_agents_from_hf()
-    if not agents:
-        print("Error: No agents found")
+    assistants = load_agents_from_hf()
+    if not assistants:
+        print("Error: No assistants found")
         return
 
-    identifiers = [agent['github_identifier'] for agent in agents if agent.get('github_identifier')]
+    identifiers = [assistant['github_identifier'] for assistant in assistants if assistant.get('github_identifier')]
     if not identifiers:
-        print("Error: No valid agent identifiers found")
+        print("Error: No valid assistant identifiers found")
         return
 
-    print(f"\n[3/4] Mining release metadata ({len(identifiers)} agents, {LEADERBOARD_TIME_FRAME_DAYS} days)...")
+    print(f"\n[3/4] Mining release metadata ({len(identifiers)} assistants, {LEADERBOARD_TIME_FRAME_DAYS} days)...")
 
     try:
         conn = get_duckdb_connection()
@@ -750,8 +750,8 @@ def mine_all_agents():
     print(f"\n[4/4] Saving leaderboard...")
 
     try:
-        leaderboard_dict = construct_leaderboard_from_metadata(all_metadata, agents)
-        monthly_metrics = calculate_monthly_metrics_by_agent(all_metadata, agents)
+        leaderboard_dict = construct_leaderboard_from_metadata(all_metadata, assistants)
+        monthly_metrics = calculate_monthly_metrics_by_agent(all_metadata, assistants)
         save_leaderboard_data_to_hf(leaderboard_dict, monthly_metrics)
 
     except Exception as e:
@@ -785,7 +785,7 @@ def setup_scheduler():
         mine_all_agents,
         trigger=trigger,
         id='mine_all_agents',
-        name='Mine GHArchive data for all agents',
+        name='Mine GHArchive data for all assistants',
         replace_existing=True
     )
 

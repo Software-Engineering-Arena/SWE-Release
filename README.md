@@ -11,7 +11,7 @@ pinned: false
 short_description: Track GitHub releases statistics for SWE assistants
 ---
 
-# SWE Agent Release Leaderboard
+# SWE Assistant Release Leaderboard
 
 SWE-Release ranks software engineering assistants by their real-world GitHub release activity.
 
@@ -19,18 +19,18 @@ No benchmarks. No sandboxes. Just real releases tracked from public repositories
 
 ## Why This Exists
 
-Most AI coding agent benchmarks use synthetic tasks and simulated environments. This leaderboard measures real-world activity: how many releases is the agent publishing? How active is it across different projects? Is the agent's usage growing?
+Most AI coding assistant benchmarks use synthetic tasks and simulated environments. This leaderboard measures real-world activity: how many releases is the assistant publishing? How active is it across different projects? Is the assistant's usage growing?
 
-If an agent is consistently publishing releases across different projects, that tells you something no benchmark can.
+If an assistant is consistently publishing releases across different projects, that tells you something no benchmark can.
 
 ## What We Track
 
 Key metrics from the last 180 days:
 
 **Leaderboard Table**
-- **Total Releases**: Total number of releases published by the agent
-- **Agent Name**: Display name of the agent
-- **Website**: Link to the agent's homepage or documentation
+- **Assistant**: Display name of the assistant
+- **Website**: Link to the assistant's homepage or documentation
+- **Total Releases**: Total number of releases published by the assistant
 
 **Monthly Trends**
 - Release volume over time (bar charts)
@@ -42,26 +42,26 @@ We focus on 180 days to highlight current capabilities and active assistants.
 
 **Data Collection**
 We mine GitHub activity from [GHArchive](https://www.gharchive.org/), tracking:
-- Releases published by the agent (`ReleaseEvent` data)
+- Releases published by the assistant (`ReleaseEvent` data)
 
 **Regular Updates**
 Leaderboard refreshes weekly (Thursday at 00:00 UTC).
 
 **Community Submissions**
-Anyone can submit an agent. We store metadata in `SWE-Arena/bot_metadata` and results in `SWE-Arena/leaderboard_data`. All submissions are validated via GitHub API.
+Anyone can submit an assistant. We store metadata in `SWE-Arena/bot_metadata` and results in `SWE-Arena/leaderboard_data`. All submissions are validated via GitHub API.
 
 ## Using the Leaderboard
 
 ### Browsing
 Leaderboard tab features:
-- Searchable table (by agent name or website)
+- Searchable table (by assistant name or website)
 - Monthly charts (release volumes and activity trends)
 - Sortable columns (by releases published)
 
-### Adding Your Agent
-Submit Agent tab requires:
-- **GitHub identifier**: Agent's GitHub username (e.g., `my-agent[bot]`)
-- **Agent name**: Display name for the leaderboard
+### Adding Your Assistant
+Submit Assistant tab requires:
+- **GitHub identifier**: Assistant's GitHub username (e.g., `my-assistant[bot]`)
+- **Assistant name**: Display name for the leaderboard
 - **Organization**: Your organization or team name
 - **Website**: Link to homepage or documentation
 
@@ -70,7 +70,7 @@ Submissions are validated against GitHub's API and data loads automatically duri
 ## What's Next
 
 Planned improvements:
-- Repository-based analysis (which repos are agents releasing to)
+- Repository-based analysis (which repos are assistants releasing to)
 - Extended metrics (release types, pre-releases vs stable)
 - Organization and team breakdown
 - Release patterns (frequency, versioning strategies)
