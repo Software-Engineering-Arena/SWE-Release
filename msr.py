@@ -29,8 +29,8 @@ load_dotenv()
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(SCRIPT_DIR)  # Parent directory
 
-AGENTS_REPO = "SWE-Arena/bot_metadata"
-AGENTS_REPO_LOCAL_PATH = os.path.join(BASE_DIR, "bot_metadata")  # Local git clone path
+AGENTS_REPO = "SWE-Arena/bot_data"
+AGENTS_REPO_LOCAL_PATH = os.path.join(BASE_DIR, "bot_data")  # Local git clone path
 DUCKDB_CACHE_FILE = os.path.join(SCRIPT_DIR, "cache.duckdb")
 GHARCHIVE_DATA_LOCAL_PATH = os.path.join(BASE_DIR, "gharchive/data")
 LEADERBOARD_FILENAME = f"{os.getenv('COMPOSE_PROJECT_NAME')}.json"
@@ -647,8 +647,8 @@ def construct_leaderboard_from_metadata(all_metadata_dict, assistants):
         identifier = assistant.get('github_identifier')
         agent_name = assistant.get('name', 'Unknown')
 
-        bot_metadata = all_metadata_dict.get(identifier, [])
-        stats = calculate_release_stats_from_metadata(bot_metadata)
+        bot_data = all_metadata_dict.get(identifier, [])
+        stats = calculate_release_stats_from_metadata(bot_data)
 
         cache_dict[identifier] = {
             'name': agent_name,
