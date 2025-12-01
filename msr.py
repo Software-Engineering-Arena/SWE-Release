@@ -306,14 +306,6 @@ def get_duckdb_connection():
     conn.execute(f"SET max_memory = '50GB';")
     conn.execute("SET temp_directory = '/tmp/duckdb_temp';")
 
-    # GZIP PARALLEL DECOMPRESSION (only needed for .json.gz files)
-    try:
-        conn.execute("SET extension_directory = '/tmp/duckdb_ext';")
-        conn.execute("INSTALL 'gzip';")
-        conn.execute("LOAD 'gzip';")
-    except Exception as e:
-        print(f"   ⚠ Warning: Could not load gzip extension: {e}")
-
     # PERFORMANCE OPTIMIZATIONS
     conn.execute("SET preserve_insertion_order = false;")  # Disable expensive ordering
     conn.execute("SET enable_object_cache = true;")  # Cache repeatedly read files
@@ -412,8 +404,7 @@ def fetch_all_release_metadata_streaming(conn, identifiers, start_date, end_date
             filename=true,
             compression='gzip',
             format='newline_delimited',
-            ignore_errors=true,
-            maximum_object_size=2147483648
+            ignore_errors=true
         )
         WHERE type = 'ReleaseEvent'
             AND TRY_CAST(json_extract_string(to_json(payload), '$.release.tag_name') AS VARCHAR) IS NOT NULL
