@@ -425,7 +425,6 @@ def get_leaderboard_dataframe():
     filtered_count = 0
     for identifier, data in cache_dict.items():
         total_releases = data.get('total_releases', 0)
-        print(f"   Assistant '{identifier}': {total_releases} total releases")
 
         # Filter out assistants with zero releases
         if total_releases == 0:
